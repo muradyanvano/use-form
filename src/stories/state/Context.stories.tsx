@@ -4,13 +4,13 @@ import { consumerDocsSource, withGithubExample } from '../preview/docsSource.ts'
 import { snippets } from '../snippets/consumerSnippets.ts'
 
 const meta = {
-  title: 'State and Performance/Context',
+  title: 'Components/FormProvider',
   component: ContextProfileForm,
   parameters: {
     docs: {
       description: {
         component: withGithubExample(
-          'FormProvider receives form.control only. Nested children call useController without prop-drilling. SubmitButton uses useFormState for isSubmitting.',
+          'FormProvider receives form.control only. Nested children resolve control via useFormContext / useController without prop-drilling. SubmitButton uses useFormState for isSubmitting.',
           'ContextProfileForm.tsx',
         ),
       },

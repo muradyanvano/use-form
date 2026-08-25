@@ -4,7 +4,7 @@ import { consumerDocsSource, withGithubExample } from '../preview/docsSource.ts'
 import { snippets } from '../snippets/consumerSnippets.ts'
 
 const meta = {
-  title: 'State and Performance/Watchers',
+  title: 'Hooks/useWatch',
   component: WatchersForm,
   parameters: {
     docs: {
