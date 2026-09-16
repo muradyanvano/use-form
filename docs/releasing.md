@@ -6,14 +6,14 @@ For the exact GitHub UI order (CI → Trusted Publishing → environment approva
 
 ## Package identity
 
-| Field      | Value                                               |
-| ---------- | --------------------------------------------------- |
-| Name       | `@muradyanvano/use-form`                            |
+| Field      | Value                                           |
+| ---------- | ----------------------------------------------- |
+| Name       | `@muradyanvano/use-form`                        |
 | Homepage   | https://muradyanvano.github.io/use-form/        |
 | Repository | https://github.com/muradyanvano/use-form        |
 | Bugs       | https://github.com/muradyanvano/use-form/issues |
-| License    | MIT                                                 |
-| `private`  | **`false`** (public npm package)                    |
+| License    | MIT                                             |
+| `private`  | **`false`** (public npm package)                |
 
 Install stable releases with `npm install @muradyanvano/use-form`. Install prereleases with `npm install @muradyanvano/use-form@beta`. See [CHANGELOG.md](../CHANGELOG.md) for released versions.
 

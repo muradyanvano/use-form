@@ -36,9 +36,9 @@ Hard rules:
 
 | Resource   | URL                                                  |
 | ---------- | ---------------------------------------------------- |
-| Repository | https://github.com/muradyanvano/use-form         |
+| Repository | https://github.com/muradyanvano/use-form             |
 | npm        | https://www.npmjs.com/package/@muradyanvano/use-form |
-| Storybook  | https://muradyanvano.github.io/use-form/         |
+| Storybook  | https://muradyanvano.github.io/use-form/             |
 
 ## 1. Required GitHub configuration
 
@@ -87,13 +87,13 @@ Without `v*`, a release-tag deployment fails with:
 Package: `@muradyanvano/use-form`  
 Provider: **GitHub Actions**
 
-| Field                    | Value              |
-| ------------------------ | ------------------ |
+| Field                    | Value          |
+| ------------------------ | -------------- |
 | GitHub organization/user | `muradyanvano` |
-| Repository               | `use-form`         |
-| Workflow filename        | `publish.yml`      |
-| Environment              | `npm-publish`      |
-| Allowed action           | `npm publish`      |
+| Repository               | `use-form`     |
+| Workflow filename        | `publish.yml`  |
+| Environment              | `npm-publish`  |
+| Allowed action           | `npm publish`  |
 
 Notes:
 

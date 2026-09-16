@@ -32,10 +32,8 @@ function IntroductionPage() {
       <Callout tone="info" title="Public documentation">
         <p>
           Interactive docs:{' '}
-          <a href="https://muradyanvano.github.io/use-form/">
-            muradyanvano.github.io/use-form
-          </a>
-          . Install stable: <code>npm install @muradyanvano/use-form</code>. Prerelease:{' '}
+          <a href="https://muradyanvano.github.io/use-form/">muradyanvano.github.io/use-form</a>.
+          Install stable: <code>npm install @muradyanvano/use-form</code>. Prerelease:{' '}
           <code>npm install @muradyanvano/use-form@beta</code>. The API is pre-1.0 — see{' '}
           <code>CHANGELOG.md</code> for released versions.
         </p>
