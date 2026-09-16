@@ -11,7 +11,7 @@ Baseline recorded before identity migration edits on **2026-08-28**.
 | npm             | 11.6.2 (local baseline)                      |
 | Target name     | `@muradyanvano/use-form`                     |
 | Target version  | `0.1.0-beta.1`                               |
-| Repository      | https://github.com/muradyanvano1995/use-form |
+| Repository      | https://github.com/muradyanvano/use-form |
 
 Pre-change verification (same commit): `npm ci` succeeded locally. Full `npm run verify` was run after migration (see final report).
 
