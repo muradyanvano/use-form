@@ -1,7 +1,7 @@
 {
   "name": "@muradyanvano/use-form",
   "private": false,
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "A strongly typed, headless React form-state and validation library.",
   "keywords": [
     "react",
