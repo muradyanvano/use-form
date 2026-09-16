@@ -28,7 +28,7 @@
 | Versions   | `0.1.0-beta.1`, `0.1.0-beta.2`                         |
 | `beta` tag | `0.1.0-beta.2`                                         |
 | `latest`   | `0.1.0-beta.1`                                         |
-| Repository | `git+https://github.com/muradyanvano1995/use-form.git` |
+| Repository | `git+https://github.com/muradyanvano/use-form.git` |
 
 ## Target release
 
