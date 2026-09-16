@@ -4,6 +4,15 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+## [0.1.3] - 2026-09-17
+
+### Package metadata
+
+- Migrated GitHub repository owner from `muradyanvano1995` to `muradyanvano`
+- Updated `repository`, `homepage`, and `bugs` URLs in `package.json`
+- Updated README, docs, Storybook links, and release guidance to the new GitHub and Pages URLs
+- No runtime or public API changes
+
 ## [0.1.2] - 2026-08-29
 
 ### Package metadata
