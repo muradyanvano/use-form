@@ -4,14 +4,14 @@
 
 Baseline recorded before identity migration edits on **2026-08-28**.
 
-| Item            | Value                                        |
-| --------------- | -------------------------------------------- |
-| Starting commit | `37ac041aa40fdd0d82b2f59c60c79f8093be34fe`   |
-| Node            | v24.5.0 (local baseline)                     |
-| npm             | 11.6.2 (local baseline)                      |
-| Target name     | `@muradyanvano/use-form`                     |
-| Target version  | `0.1.0-beta.1`                               |
-| Repository      | https://github.com/muradyanvano/use-form |
+| Item            | Value                                      |
+| --------------- | ------------------------------------------ |
+| Starting commit | `37ac041aa40fdd0d82b2f59c60c79f8093be34fe` |
+| Node            | v24.5.0 (local baseline)                   |
+| npm             | 11.6.2 (local baseline)                    |
+| Target name     | `@muradyanvano/use-form`                   |
+| Target version  | `0.1.0-beta.1`                             |
+| Repository      | https://github.com/muradyanvano/use-form   |
 
 Pre-change verification (same commit): `npm ci` succeeded locally. Full `npm run verify` was run after migration (see final report).
 

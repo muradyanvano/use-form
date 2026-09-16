@@ -10,11 +10,11 @@ Typed React 19 form hooks for nested objects, one-level field arrays, file metad
 
 Published on npm as **`@muradyanvano/use-form`**. The API is currently pre-1.0; see [CHANGELOG.md](CHANGELOG.md) for released versions.
 
-| Resource      | URL                                                                                 |
-| ------------- | ----------------------------------------------------------------------------------- |
-| **Storybook** | [muradyanvano.github.io/use-form](https://muradyanvano.github.io/use-form/) |
-| **npm**       | [@muradyanvano/use-form](https://www.npmjs.com/package/@muradyanvano/use-form)      |
-| **GitHub**    | [muradyanvano/use-form](https://github.com/muradyanvano/use-form)           |
+| Resource      | URL                                                                             |
+| ------------- | ------------------------------------------------------------------------------- |
+| **Storybook** | [muradyanvano.github.io/use-form](https://muradyanvano.github.io/use-form/)     |
+| **npm**       | [@muradyanvano/use-form](https://www.npmjs.com/package/@muradyanvano/use-form)  |
+| **GitHub**    | [muradyanvano/use-form](https://github.com/muradyanvano/use-form)               |
 | **Issues**    | [GitHub Issues](https://github.com/muradyanvano/use-form/issues)                |
 | **Changelog** | [CHANGELOG.md](https://github.com/muradyanvano/use-form/blob/main/CHANGELOG.md) |
 

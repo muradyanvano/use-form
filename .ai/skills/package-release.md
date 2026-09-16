@@ -85,13 +85,13 @@ ESM only. Do not claim CommonJS without `require()` tests.
 
 Published npm package: `@muradyanvano/use-form`.
 
-| Field       | Value                                        |
-| ----------- | -------------------------------------------- |
-| description | Concise React form-state + validation blurb  |
-| keywords    | Focused discovery tags in `package.json`     |
-| homepage    | https://muradyanvano.github.io/use-form/ |
-| repository  | GitHub source (`muradyanvano/use-form`)  |
-| bugs        | GitHub Issues                                |
+| Field       | Value                                       |
+| ----------- | ------------------------------------------- |
+| description | Concise React form-state + validation blurb |
+| keywords    | Focused discovery tags in `package.json`    |
+| homepage    | https://muradyanvano.github.io/use-form/    |
+| repository  | GitHub source (`muradyanvano/use-form`)     |
+| bugs        | GitHub Issues                               |
 
 For every release, verify package name, description, keywords, version, license, homepage, repository, bugs, exports, files and publishConfig. When package capabilities or positioning change, update description and keywords only when necessary. Canonical keywords live only in `package.json` — do not duplicate the list through consumer docs.
 
