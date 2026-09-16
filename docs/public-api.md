@@ -2,7 +2,7 @@
 
 Published npm package: **`@muradyanvano/use-form`**. Subpaths below use that scoped name.
 
-Interactive documentation: [https://muradyanvano1995.github.io/use-form/](https://muradyanvano1995.github.io/use-form/).
+Interactive documentation: [https://muradyanvano.github.io/use-form/](https://muradyanvano.github.io/use-form/).
 
 Classifications:
 

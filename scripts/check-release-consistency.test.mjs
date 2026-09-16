@@ -40,7 +40,7 @@ test('findStalePhrases detects undeployed Storybook wording', () => {
 
 test('findStalePhrases ignores clean consumer copy', () => {
   const hits = findStalePhrases(
-    'npm install @muradyanvano/use-form — docs at https://muradyanvano1995.github.io/use-form/',
+    'npm install @muradyanvano/use-form — docs at https://muradyanvano.github.io/use-form/',
   )
   assert.equal(hits.length, 0)
 })

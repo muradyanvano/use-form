@@ -36,9 +36,9 @@ Hard rules:
 
 | Resource   | URL                                                  |
 | ---------- | ---------------------------------------------------- |
-| Repository | https://github.com/muradyanvano1995/use-form         |
+| Repository | https://github.com/muradyanvano/use-form         |
 | npm        | https://www.npmjs.com/package/@muradyanvano/use-form |
-| Storybook  | https://muradyanvano1995.github.io/use-form/         |
+| Storybook  | https://muradyanvano.github.io/use-form/         |
 
 ## 1. Required GitHub configuration
 
@@ -89,7 +89,7 @@ Provider: **GitHub Actions**
 
 | Field                    | Value              |
 | ------------------------ | ------------------ |
-| GitHub organization/user | `muradyanvano1995` |
+| GitHub organization/user | `muradyanvano` |
 | Repository               | `use-form`         |
 | Workflow filename        | `publish.yml`      |
 | Environment              | `npm-publish`      |
@@ -298,7 +298,7 @@ Notes:
 4. Storybook builds (`npm run build:storybook`).
 5. `storybook-static` is uploaded as a Pages artifact.
 6. Deploy job uses environment `github-pages`.
-7. Public docs update at https://muradyanvano1995.github.io/use-form/
+7. Public docs update at https://muradyanvano.github.io/use-form/
 
 Verify: root page, `index.html`, `index.json`, JS/CSS assets, Introduction, Getting Started, API Reference, representative examples, direct story URLs, mobile layout, console, npm/GitHub links. Allow several minutes for Pages propagation.
 

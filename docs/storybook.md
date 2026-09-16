@@ -1,6 +1,6 @@
 # Storybook contributor guide
 
-Public documentation: [https://muradyanvano1995.github.io/use-form/](https://muradyanvano1995.github.io/use-form/).
+Public documentation: [https://muradyanvano.github.io/use-form/](https://muradyanvano.github.io/use-form/).
 
 Stable GitHub Releases deploy Storybook automatically via `.github/workflows/deploy-storybook.yml` (prereleases do not update the public site). Contributors develop locally with `npm run storybook`. A successful `build:storybook` is necessary but not sufficient — review the light canvas at mobile and desktop widths before merging documentation changes.
 
