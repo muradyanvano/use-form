@@ -89,8 +89,8 @@ Published npm package: `@muradyanvano/use-form`.
 | ----------- | -------------------------------------------- |
 | description | Concise React form-state + validation blurb  |
 | keywords    | Focused discovery tags in `package.json`     |
-| homepage    | https://muradyanvano1995.github.io/use-form/ |
-| repository  | GitHub source (`muradyanvano1995/use-form`)  |
+| homepage    | https://muradyanvano.github.io/use-form/ |
+| repository  | GitHub source (`muradyanvano/use-form`)  |
 | bugs        | GitHub Issues                                |
 
 For every release, verify package name, description, keywords, version, license, homepage, repository, bugs, exports, files and publishConfig. When package capabilities or positioning change, update description and keywords only when necessary. Canonical keywords live only in `package.json` — do not duplicate the list through consumer docs.
@@ -115,7 +115,7 @@ Size budgets live in `scripts/size-budget.json` and are measured from minified c
 
 ## Storybook
 
-- Public URL: https://muradyanvano1995.github.io/use-form/
+- Public URL: https://muradyanvano.github.io/use-form/
 - Deploy workflow: `.github/workflows/deploy-storybook.yml` (filename must not change).
 - Stable GitHub Releases deploy from the exact release tag; prereleases do not overwrite stable docs.
 - `workflow_dispatch` can deploy a specific tag or commit.

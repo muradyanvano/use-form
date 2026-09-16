@@ -1,4 +1,4 @@
-export const GITHUB_BLOB = 'https://github.com/muradyanvano1995/use-form/blob/main'
+export const GITHUB_BLOB = 'https://github.com/muradyanvano/use-form/blob/main'
 
 export function githubExamplePath(fileName: string): string {
   return `${GITHUB_BLOB}/src/examples/${fileName}`

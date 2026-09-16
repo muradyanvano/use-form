@@ -25,11 +25,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/muradyanvano1995/use-form.git"
+    "url": "git+https://github.com/muradyanvano/use-form.git"
   },
-  "homepage": "https://muradyanvano1995.github.io/use-form/",
+  "homepage": "https://muradyanvano.github.io/use-form/",
   "bugs": {
-    "url": "https://github.com/muradyanvano1995/use-form/issues"
+    "url": "https://github.com/muradyanvano/use-form/issues"
   },
   "type": "module",
   "sideEffects": false,

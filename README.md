@@ -2,9 +2,9 @@
 
 [![npm version](https://img.shields.io/npm/v/@muradyanvano/use-form)](https://www.npmjs.com/package/@muradyanvano/use-form)
 [![npm downloads](https://img.shields.io/npm/dm/@muradyanvano/use-form)](https://www.npmjs.com/package/@muradyanvano/use-form)
-[![CI](https://github.com/muradyanvano1995/use-form/actions/workflows/ci.yml/badge.svg)](https://github.com/muradyanvano1995/use-form/actions/workflows/ci.yml)
-[![license](https://img.shields.io/npm/l/@muradyanvano/use-form)](https://github.com/muradyanvano1995/use-form/blob/main/LICENSE)
-[![Storybook](https://img.shields.io/badge/Storybook-docs-FF4785?logo=storybook&logoColor=white)](https://muradyanvano1995.github.io/use-form/)
+[![CI](https://github.com/muradyanvano/use-form/actions/workflows/ci.yml/badge.svg)](https://github.com/muradyanvano/use-form/actions/workflows/ci.yml)
+[![license](https://img.shields.io/npm/l/@muradyanvano/use-form)](https://github.com/muradyanvano/use-form/blob/main/LICENSE)
+[![Storybook](https://img.shields.io/badge/Storybook-docs-FF4785?logo=storybook&logoColor=white)](https://muradyanvano.github.io/use-form/)
 
 Typed React 19 form hooks for nested objects, one-level field arrays, file metadata, validation timing, and accessible native field registration.
 
@@ -12,13 +12,13 @@ Published on npm as **`@muradyanvano/use-form`**. The API is currently pre-1.0; 
 
 | Resource      | URL                                                                                 |
 | ------------- | ----------------------------------------------------------------------------------- |
-| **Storybook** | [muradyanvano1995.github.io/use-form](https://muradyanvano1995.github.io/use-form/) |
+| **Storybook** | [muradyanvano.github.io/use-form](https://muradyanvano.github.io/use-form/) |
 | **npm**       | [@muradyanvano/use-form](https://www.npmjs.com/package/@muradyanvano/use-form)      |
-| **GitHub**    | [muradyanvano1995/use-form](https://github.com/muradyanvano1995/use-form)           |
-| **Issues**    | [GitHub Issues](https://github.com/muradyanvano1995/use-form/issues)                |
-| **Changelog** | [CHANGELOG.md](https://github.com/muradyanvano1995/use-form/blob/main/CHANGELOG.md) |
+| **GitHub**    | [muradyanvano/use-form](https://github.com/muradyanvano/use-form)           |
+| **Issues**    | [GitHub Issues](https://github.com/muradyanvano/use-form/issues)                |
+| **Changelog** | [CHANGELOG.md](https://github.com/muradyanvano/use-form/blob/main/CHANGELOG.md) |
 
-Explore interactive examples, validation behavior, field arrays, controlled components, asynchronous flows and DevTools in the [Storybook documentation](https://muradyanvano1995.github.io/use-form/).
+Explore interactive examples, validation behavior, field arrays, controlled components, asynchronous flows and DevTools in the [Storybook documentation](https://muradyanvano.github.io/use-form/).
 
 ## Features
 
@@ -250,7 +250,7 @@ See [docs/package-roadmap.md](docs/package-roadmap.md) and Storybook **Limitatio
 
 ## Documentation
 
-- Interactive docs: [Storybook](https://muradyanvano1995.github.io/use-form/)
+- Interactive docs: [Storybook](https://muradyanvano.github.io/use-form/)
 - Guides: [docs/](docs/)
 - Local Storybook for contributors: `npm run storybook` — rules in [docs/storybook.md](docs/storybook.md)
 - API reference (TypeDoc): `npm run docs:api` → gitignored `api-docs/`
@@ -261,7 +261,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) and the post-change guide [docs/developme
 
 ## Security
 
-See [SECURITY.md](SECURITY.md). Report issues via [GitHub Issues](https://github.com/muradyanvano1995/use-form/issues) until a dedicated security contact is published.
+See [SECURITY.md](SECURITY.md). Report issues via [GitHub Issues](https://github.com/muradyanvano/use-form/issues) until a dedicated security contact is published.
 
 ## License
 

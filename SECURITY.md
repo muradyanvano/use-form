@@ -2,7 +2,7 @@
 
 ## Reporting vulnerabilities
 
-No private vulnerability-reporting address is configured yet. Until a dedicated security contact is published, report suspected vulnerabilities via [GitHub Issues](https://github.com/muradyanvano1995/use-form/issues) for the `@muradyanvano/use-form` repository.
+No private vulnerability-reporting address is configured yet. Until a dedicated security contact is published, report suspected vulnerabilities via [GitHub Issues](https://github.com/muradyanvano/use-form/issues) for the `@muradyanvano/use-form` repository.
 
 ## Client-side validation is not a security boundary
 

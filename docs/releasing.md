@@ -9,15 +9,15 @@ For the exact GitHub UI order (CI → Trusted Publishing → environment approva
 | Field      | Value                                               |
 | ---------- | --------------------------------------------------- |
 | Name       | `@muradyanvano/use-form`                            |
-| Homepage   | https://muradyanvano1995.github.io/use-form/        |
-| Repository | https://github.com/muradyanvano1995/use-form        |
-| Bugs       | https://github.com/muradyanvano1995/use-form/issues |
+| Homepage   | https://muradyanvano.github.io/use-form/        |
+| Repository | https://github.com/muradyanvano/use-form        |
+| Bugs       | https://github.com/muradyanvano/use-form/issues |
 | License    | MIT                                                 |
 | `private`  | **`false`** (public npm package)                    |
 
 Install stable releases with `npm install @muradyanvano/use-form`. Install prereleases with `npm install @muradyanvano/use-form@beta`. See [CHANGELOG.md](../CHANGELOG.md) for released versions.
 
-Public Storybook documentation: [https://muradyanvano1995.github.io/use-form/](https://muradyanvano1995.github.io/use-form/).
+Public Storybook documentation: [https://muradyanvano.github.io/use-form/](https://muradyanvano.github.io/use-form/).
 
 ## Publishing model
 
@@ -46,7 +46,7 @@ The workflow rejects prereleases sent to `latest` and stable versions sent to `b
 - Manual `workflow_dispatch` can deploy a specific tag or commit via the `ref` input.
 - Output directory: `storybook-static` (gitignored; not committed).
 - For a stable release, public Storybook must be deployed from the exact stable Git tag — not from an arbitrary unverified working tree.
-- After a stable GitHub Release is published, verify that Deploy Storybook ran for the matching tag and that https://muradyanvano1995.github.io/use-form/ remains healthy (`index.html`, `index.json`, and manager JS assets load).
+- After a stable GitHub Release is published, verify that Deploy Storybook ran for the matching tag and that https://muradyanvano.github.io/use-form/ remains healthy (`index.html`, `index.json`, and manager JS assets load).
 
 Optional production smoke after deploy (manual or future CI): retry briefly for Pages propagation, then confirm HTTP 200 for `/`, `/index.json`, and at least one `sb-manager` asset. Do not duplicate the full Storybook browser suite against production.
 
@@ -74,7 +74,7 @@ These steps are documented only. Do **not** execute them from an agent session u
 4. Verify with `npm view` and a fresh `npm install` (see the GitHub guide).
 5. Create the matching Git tag and GitHub Release **only after** npm publish succeeds.
 6. For stable releases, confirm Deploy Storybook runs from the release tag and the public Storybook URL stays healthy.
-7. Optionally update the GitHub repository **About → Website** to https://muradyanvano1995.github.io/use-form/.
+7. Optionally update the GitHub repository **About → Website** to https://muradyanvano.github.io/use-form/.
 
 ## Safety
 

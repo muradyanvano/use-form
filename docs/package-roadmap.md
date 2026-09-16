@@ -25,7 +25,7 @@
 | Accessibility         | **Done**    | High    | Headless IDs / aria / focus-on-error; controller exposes `id` / `errorId` / aria props            | P2                          |
 | SSR safety            | **Partial** | Medium  | Stable store `getServerSnapshot`; selector cache; no dedicated SSR hydration suite                | P1                          |
 | Package build         | **Done**    | High    | Published on npm (`latest` and `beta` channels)                                                   | —                           |
-| Documentation         | **Done**    | High    | Public Storybook at https://muradyanvano1995.github.io/use-form/ (light-only); TypeDoc local only | —                           |
+| Documentation         | **Done**    | High    | Public Storybook at https://muradyanvano.github.io/use-form/ (light-only); TypeDoc local only | —                           |
 
 ## Recommended phase order
 
@@ -88,4 +88,4 @@ Phase 13 details:
 
 ## Release readiness (honest)
 
-Published on npm (stable and beta channels). Public Storybook is deployed from stable GitHub Releases to https://muradyanvano1995.github.io/use-form/.
+Published on npm (stable and beta channels). Public Storybook is deployed from stable GitHub Releases to https://muradyanvano.github.io/use-form/.
