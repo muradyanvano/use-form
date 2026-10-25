@@ -1,4 +1,4 @@
-import { useCallback, useLayoutEffect, useMemo, useReducer } from 'react'
+import { useCallback, useMemo } from 'react'
 import type { FieldArrayItem, FieldArrayPath, FormValues } from './baseTypes.ts'
 import { resolveControl, useOptionalFormContext } from './formContext.ts'
 import {
@@ -75,26 +75,18 @@ export function useFieldArray<
     name: name as never,
   }) as TItem[] | undefined
 
-  const internals = getControlInternals(control)
   const length = Array.isArray(items) ? items.length : 0
-  const [keysVersion, bumpKeys] = useReducer((count: number) => count + 1, 0)
-
-  useLayoutEffect(() => {
-    getControlInternals(control).getHandlers().ensureFieldArrayKeys(name, length)
-    bumpKeys()
-  }, [name, length, control])
-
-  const storedKeys = internals.getHandlers().getFieldArrayKeys(name)
+  // Idempotent: allocates only for indices without a key and returns the same array
+  // while the length is unchanged, so keys are stable from the very first render.
+  const storedKeys = getControlInternals(control).getHandlers().ensureFieldArrayKeys(name, length)
 
   const fields = useMemo((): Array<FieldArrayField<TItem>> => {
     const list = Array.isArray(items) ? items : []
     return list.map((value, index) => ({
-      key: storedKeys?.[index] ?? `fa-pending-${String(name)}-${index}`,
+      key: storedKeys[index],
       value,
     }))
-    // keysVersion forces refresh after ensure/mutation key writes
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- keysVersion tracks opaque key store
-  }, [items, storedKeys, name, keysVersion])
+  }, [items, storedKeys])
 
   const readItems = useCallback((): TItem[] => {
     const current = getValueAtPath(getControlInternals(control).store.getState().values, name)

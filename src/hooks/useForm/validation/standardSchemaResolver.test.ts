@@ -51,6 +51,37 @@ describe('standardSchemaResolver', () => {
     })
   })
 
+  it('maps spec PathSegment objects ({ key }) such as Valibot issue paths', async () => {
+    const resolver = standardSchemaResolver<Input, Output>(
+      schema(() => ({
+        issues: [
+          { path: [{ key: 'products' }, { key: 0 }, { key: 'name' }], message: 'Name is required' },
+          { path: [{ key: 'age' }], message: 'Age is invalid' },
+        ],
+      })),
+    )
+
+    await expect(
+      resolver({ age: '', products: [{ name: '' }] }, { context: undefined }),
+    ).resolves.toMatchObject({
+      success: false,
+      errors: { age: 'Age is invalid', 'products.0.name': 'Name is required' },
+    })
+  })
+
+  it('routes issue paths with __proto__ / constructor / prototype segments to rootError', async () => {
+    for (const path of [['__proto__'], [{ key: 'constructor' }, { key: 'prototype' }]]) {
+      const resolver = standardSchemaResolver<Input, Output>(
+        schema(() => ({ issues: [{ path, message: 'Unsafe' }] })),
+      )
+      const result = await resolver({ age: '', products: [] }, { context: undefined })
+      expect(result).toMatchObject({ success: false, errors: {}, rootError: 'Unsafe' })
+      if (!result.success) {
+        expect(Object.getPrototypeOf(result.errorDetails)).toBe(Object.prototype)
+      }
+    }
+  })
+
   it('maps symbol-path and pathless issues to rootError (never accidental success)', async () => {
     const resolver = standardSchemaResolver<Input, Output>(
       schema(() => ({

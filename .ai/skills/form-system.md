@@ -153,7 +153,11 @@ Getters (non-reactive): `getValues`, `getValue`, `getErrors`, `getErrorDetails`,
 
 Validation / submit: `validate`, `validateField`, `handleSubmit`
 
+`handleSubmit(event?)` accepts any `{ preventDefault?() }` (form or button events) and rejects when `onSubmit`/validators throw. Each submit has a cycle id; `reset()` (including `helpers.reset()` inside `onSubmit`) starts a new cycle, so the stale submit does not set `isSubmitted` — except `reset(…, { keepIsSubmitted: true })`, which leaves the cycle current so it still finishes as submitted.
+
 Bindings: `register`, `getFieldProps`, `getFieldId`, `getErrorId`
+
+`register(name)` returns a ref callback cached per `fieldId + name` (stable across renders). It returns a React 19 cleanup for the attached element and still handles legacy/composed `ref(null)` calls. `unregister` evicts cached refs under the path (so a still-mounted input re-registers on its next render, as before caching), and an entry with no attached element is evicted after a microtask. `dirtyFields` is memoized per `(values, defaultValues)` in `utilities.ts` and frozen, because all subscribers share it. Path reads (`getValueAtPath`) only follow own properties / array indices, and clone/merge skip `__proto__` / `prototype` / `constructor`.
 
 ### Granular subscriptions (Phase 1)
 

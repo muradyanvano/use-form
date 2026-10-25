@@ -147,11 +147,13 @@ export function clearElementMapUnderArray<T = FocusableMapEntry>(
   }
 }
 
+/** Returns `existing` unchanged when it already has `length` keys (stable identity for memoization). */
 export function ensureFieldArrayKeys(
   existing: readonly string[] | undefined,
   length: number,
   allocateKey: () => string,
-): string[] {
+): readonly string[] {
+  if (existing && existing.length === length) return existing
   const keys = existing ? existing.slice(0, Math.max(0, length)) : []
   while (keys.length < length) {
     keys.push(allocateKey())

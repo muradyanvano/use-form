@@ -83,6 +83,7 @@ Focus runs after the store update via `queueMicrotask` + `requestAnimationFrame`
 - Stored in control internals (per-form map), **not** in submitted values.
 - Generated with a per-form monotonic counter (`fa-1`, `fa-2`, …) — no `crypto.randomUUID()`.
 - Safe in browsers, tests, and SSR module evaluation.
+- Assigned during the first render, so items mount once with their final key (no placeholder keys).
 - `update` preserves the item key.
 - `append` / `prepend` / `insert` allocate new keys.
 - `remove` / `clear` drop keys.

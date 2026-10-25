@@ -52,19 +52,35 @@ export function valuesEqual(a: unknown, b: unknown): boolean {
   return leafValuesEqual(a, b)
 }
 
+/**
+ * State snapshots are immutable, so the dirty map for one `(values, defaultValues)` pair is
+ * computed once and shared by `useForm`, subscription hooks, controllers, and getters.
+ */
+const dirtyFieldsCache = new WeakMap<
+  object,
+  { defaultValues: unknown; dirty: FieldDirtyMap<FormValues> }
+>()
+
+/** Shared, cached result — frozen because every subscriber of the snapshot receives the same map. */
 export function computeDirtyFields<T extends FormValues>(
   values: T,
   defaultValues: T,
 ): FieldDirtyMap<T> {
+  const cached = dirtyFieldsCache.get(values)
+  if (cached && cached.defaultValues === defaultValues) {
+    return cached.dirty
+  }
   const dirty: FieldDirtyMap<T> = {}
   for (const path of collectDirtyLeafPaths(values, defaultValues)) {
     dirty[path as FieldPath<T>] = true
   }
+  Object.freeze(dirty)
+  dirtyFieldsCache.set(values, { defaultValues, dirty })
   return dirty
 }
 
 export function computeIsDirty<T extends FormValues>(values: T, defaultValues: T): boolean {
-  return collectDirtyLeafPaths(values, defaultValues).length > 0
+  return Object.keys(computeDirtyFields(values, defaultValues)).length > 0
 }
 
 export function hasFieldErrors<T extends FormValues>(errors: FieldErrors<T>): boolean {

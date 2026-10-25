@@ -86,7 +86,7 @@ The DevTools subpath requires **`react`** and **`react-dom`** (portals). Core (`
 
 ### Types — resolver-entry-only
 
-`StandardSchemaV1`, `StandardSchemaV1Issue`, `StandardSchemaV1Result`
+`StandardSchemaV1`, `StandardSchemaV1Issue`, `StandardSchemaV1PathSegment`, `StandardSchemaV1Result`
 
 ## Module format
 

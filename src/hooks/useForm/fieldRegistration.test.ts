@@ -157,6 +157,20 @@ describe('fieldRegistration', () => {
       for (const task of queue.splice(0)) task()
       expect(calls).toEqual(['a2'])
     })
+
+    it('does not run a task queued before dispose when rescheduled afterwards', () => {
+      const queue: Array<() => void> = []
+      const scheduler = createDeferredUnregisterScheduler((task) => {
+        queue.push(task)
+      })
+      const calls: string[] = []
+
+      scheduler.schedule('a', () => calls.push('before'))
+      scheduler.dispose()
+      scheduler.schedule('a', () => calls.push('after'))
+      for (const task of queue.splice(0)) task()
+      expect(calls).toEqual(['after'])
+    })
   })
 
   describe('path guards', () => {

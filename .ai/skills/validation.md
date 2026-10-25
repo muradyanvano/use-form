@@ -67,7 +67,7 @@ rules: {
 
 ## Debounced async (`rules.async`)
 
-Use `rules.async` for expensive remote checks. Metadata lives in a private WeakMap. Ordinary async validators without the helper stay immediate. Change/dependency debounce; blur/manual/submit immediate. `isValidating` excludes pending debounce delay. Waiting clears validation-source issues only; `manual` is kept; `server` clears on value change. No caching APIs. See `docs/async-validation.md` and `docs/structured-errors.md`.
+Use `rules.async` for expensive remote checks. Metadata lives in a private WeakMap. Ordinary async validators without the helper stay immediate. Change/dependency debounce; blur/manual/submit immediate. `isValidating` excludes pending debounce delay. It is derived from a private set of active validation runs (`activeValidationsRef` in `useForm.ts`) inside `commitState`: never write `isValidating` directly; start/settle runs instead, and supersede them when a field generation bumps, a whole-form run starts, or `reset()` invalidates work. Waiting clears validation-source issues only; `manual` is kept; `server` clears on value change. No caching APIs. See `docs/async-validation.md` and `docs/structured-errors.md`.
 
 ## Async default values
 
@@ -117,7 +117,7 @@ Concrete indexed rules (`'products.0.name'`) work when those paths exist. Wildca
 
 ## Schema libraries (Zod, etc.)
 
-Prefer the public `FormResolver` contract (`resolver` + optional `resolverContext`) or `standardSchemaResolver` from `src/resolvers/standard-schema` for Standard Schema v1–compatible schemas. Map library-specific issues to path-keyed `FieldErrors<TInput>` inside a custom resolver. Do not add concrete schema packages as core runtime dependencies.
+Prefer the public `FormResolver` contract (`resolver` + optional `resolverContext`) or `standardSchemaResolver` from `src/resolvers/standard-schema` for Standard Schema v1–compatible schemas. Issue paths accept plain keys and spec `{ key }` segments; symbol or unsafe (`__proto__` / `prototype` / `constructor`) segments become `rootError`. Keep the exported `StandardSchemaV1*` types structurally compatible with the spec, including its `?: … | undefined` optionals (`standardSchema.type-test.ts`, plus an `exactOptionalPropertyTypes` pass in `test:package`). Map library-specific issues to path-keyed `FieldErrors<TInput>` inside a custom resolver. Do not add concrete schema packages as core runtime dependencies.
 
 ## Adding a new built-in rule
 

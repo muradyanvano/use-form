@@ -1,7 +1,7 @@
 {
   "name": "@muradyanvano/use-form",
   "private": false,
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "A strongly typed, headless React form-state and validation library.",
   "keywords": [
     "react",
@@ -108,9 +108,9 @@
     "@emnapi/core": "^1.11.3",
     "@emnapi/runtime": "^1.11.3",
     "@eslint/js": "^10.0.1",
-    "@storybook/addon-a11y": "^10.5.8",
-    "@storybook/addon-docs": "^10.5.8",
-    "@storybook/react-vite": "^10.5.8",
+    "@storybook/addon-a11y": "^10.6.3",
+    "@storybook/addon-docs": "^10.6.3",
+    "@storybook/react-vite": "^10.6.3",
     "@storybook/test-runner": "^0.24.4",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.2",
@@ -121,8 +121,8 @@
     "@types/react-dom": "^19.2.3",
     "@types/react-syntax-highlighter": "^15.5.13",
     "@vitejs/plugin-react": "^6.0.4",
-    "@vitest/coverage-v8": "^4.1.10",
-    "@vitest/ui": "^4.1.10",
+    "@vitest/coverage-v8": "^4.1.12",
+    "@vitest/ui": "^4.1.12",
     "axe-playwright": "^2.2.2",
     "eslint": "^10.8.0",
     "eslint-config-prettier": "^10.1.8",
@@ -135,12 +135,12 @@
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-syntax-highlighter": "^16.1.1",
-    "storybook": "^10.5.8",
+    "storybook": "^10.6.3",
     "typedoc": "^0.28.20",
     "typescript": "~6.0.2",
     "typescript-eslint": "^8.65.0",
-    "vite": "^8.2.0",
+    "vite": "^8.3.5",
     "vite-plugin-dts": "^5.0.3",
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.12"
   }
 }

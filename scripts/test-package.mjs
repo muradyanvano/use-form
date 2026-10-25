@@ -1,5 +1,13 @@
 import { execFileSync, execSync } from 'node:child_process'
-import { cpSync, existsSync, mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
+import {
+  cpSync,
+  existsSync,
+  mkdtempSync,
+  mkdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
@@ -46,6 +54,60 @@ function assertDistBuilt() {
   assert(
     existsSync(path.join(distDir, 'resolvers/standard-schema/index.js')),
     'dist/resolvers/standard-schema/index.js is missing. Run npm run build:lib first.',
+  )
+}
+
+/**
+ * Every ```tsx block in README.md is a self-contained module. Type-check each one against the
+ * packed package so documented examples cannot drift from the published API.
+ */
+function writeReadmeExamples(consumerDir) {
+  const readme = readFileSync(path.join(rootDir, 'README.md'), 'utf8')
+  const blocks = [...readme.matchAll(/```tsx\r?\n([\s\S]*?)```/g)].map((match) => match[1])
+  assert(blocks.length > 0, 'README.md has no tsx examples to type-check')
+  blocks.forEach((code, index) => {
+    writeFileSync(path.join(consumerDir, `src/readme-${index + 1}.tsx`), code)
+  })
+  writeFileSync(
+    path.join(consumerDir, 'src/env.d.ts'),
+    'interface ImportMeta { readonly env: { readonly DEV: boolean } }\n',
+  )
+  console.log(`type-checking ${blocks.length} README examples`)
+}
+
+/**
+ * Spec-typed Standard Schema objects (how Zod 4 / Valibot declare them) must be accepted by the
+ * packed adapter types, including for consumers that enable `exactOptionalPropertyTypes`.
+ */
+function writeStandardSchemaSpecCheck(consumerDir) {
+  const source = readFileSync(
+    path.join(rootDir, 'src/hooks/useForm/validation/standardSchema.type-test.ts'),
+    'utf8',
+  )
+  const specifier = `${packageJson.name}/resolvers/standard-schema`
+  const code = source.replace("'./standardSchemaResolver.ts'", `'${specifier}'`)
+  assert(code !== source, 'standardSchema.type-test.ts import specifier changed')
+  mkdirSync(path.join(consumerDir, 'spec'), { recursive: true })
+  writeFileSync(path.join(consumerDir, 'spec/standard-schema.ts'), code)
+  writeFileSync(
+    path.join(consumerDir, 'tsconfig.exact.json'),
+    `${JSON.stringify(
+      {
+        compilerOptions: {
+          target: 'ES2022',
+          module: 'ESNext',
+          moduleResolution: 'bundler',
+          strict: true,
+          exactOptionalPropertyTypes: true,
+          skipLibCheck: true,
+          noEmit: true,
+          types: [],
+        },
+        include: ['spec'],
+      },
+      null,
+      2,
+    )}\n`,
   )
 }
 
@@ -149,6 +211,8 @@ const schema: StandardSchemaV1<Input, Output> = {
 export const resolver = standardSchemaResolver<Input, Output>(schema)
 `,
   )
+  writeReadmeExamples(consumerDir)
+  writeStandardSchemaSpecCheck(consumerDir)
   writeFileSync(
     path.join(consumerDir, 'src/jsx.tsx'),
     `import { FormProvider, useForm } from '${packageJson.name}'
@@ -157,7 +221,12 @@ export function Demo() {
   const form = useForm({ defaultValues: { email: '' } })
   return (
     <FormProvider control={form.control}>
-      <input {...form.register('email')} />
+      <form onSubmit={form.handleSubmit}>
+        <input {...form.register('email')} />
+        <button type="button" onClick={form.handleSubmit}>
+          Save
+        </button>
+      </form>
     </FormProvider>
   )
 }
@@ -287,6 +356,17 @@ try {
       path.join(consumerDir, 'node_modules/typescript/lib/tsc.js'),
       '-p',
       'tsconfig.json',
+      '--pretty',
+      'false',
+    ],
+    consumerDir,
+  )
+  run(
+    process.execPath,
+    [
+      path.join(consumerDir, 'node_modules/typescript/lib/tsc.js'),
+      '-p',
+      'tsconfig.exact.json',
       '--pretty',
       'false',
     ],

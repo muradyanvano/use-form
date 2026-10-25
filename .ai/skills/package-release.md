@@ -99,6 +99,8 @@ MIT license. Consumer docs use the scoped name; implementation keeps relative im
 
 ## Scripts
 
+`test:package` also extracts every ` ```tsx ` block from `README.md` into the packed consumer and type-checks it, so README examples must be self-contained modules (own imports, no undeclared identifiers; use `declare const` for external values). It also compiles `src/hooks/useForm/validation/standardSchema.type-test.ts` against the packed resolver entry with `exactOptionalPropertyTypes` (keep that file's `'./standardSchemaResolver.ts'` import specifier; the script rewrites it). `.storybook/test-runner.ts` fails any story that logs `console.error` or a page error.
+
 `verify` is the full non-destructive suite. There is no `prepublishOnly`. `release:check` validates package/lock identity, homepage/Storybook URL, exports, active docs, and changelog entry for the current version. `pack:dry-run` inspects the archive without publishing. `lockfile:check` runs `npm ci --dry-run` and is the first step of `verify`.
 
 Supported tooling (`package.json` `engines`): Node `^20.19.0 || >=22.12.0`, npm `>=10`. Prefer `npm ci` from the committed lockfile.

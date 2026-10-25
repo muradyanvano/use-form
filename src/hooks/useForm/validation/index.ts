@@ -37,6 +37,7 @@ export { standardSchemaResolver } from './standardSchemaResolver.ts'
 export type {
   StandardSchemaV1,
   StandardSchemaV1Issue,
+  StandardSchemaV1PathSegment,
   StandardSchemaV1Result,
 } from './standardSchemaResolver.ts'
 

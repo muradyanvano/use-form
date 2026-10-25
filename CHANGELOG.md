@@ -4,6 +4,44 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+## [0.1.4] - 2026-10-25
+
+### Fixed
+
+- `isValidating` no longer drops to `false` while another field's validation is still running. It is now derived from the set of active, non-superseded validation runs.
+- `helpers.reset()` / `form.reset()` called during `handleSubmit` (including inside `onSubmit`) now wins: the stale submit no longer sets `isSubmitted: true` afterward. `reset(values, { keepIsSubmitted: true })` keeps the previous behavior and lets the in-flight submit finish as submitted.
+- Prototype hardening: `setValues`, `reset`, async default merges, and value cloning ignore `__proto__`, `prototype`, and `constructor` keys (for example from `JSON.parse` payloads). Previously such a payload could replace the prototype of a nested form-values object so it inherited unexpected properties; global `Object.prototype` was not affected. Path reads (`getValues`, `watch`, errors) now resolve only own properties and numeric array indices, so paths such as `list.length` or `toString` return `undefined`.
+- Standard Schema adapter: issue paths containing `__proto__`, `prototype`, or `constructor` are reported as `rootError` instead of a generic message.
+- Standard Schema types: `StandardSchemaV1` now matches the spec's optional properties (`path`, `types` allow `undefined`), so Zod 4, Valibot, and ArkType schemas are accepted by `standardSchemaResolver`, including under `exactOptionalPropertyTypes`.
+- Declarations no longer import `SubmitEvent` from `react`, which failed to type-check with `@types/react` versions before 19.2.
+- `useFieldArray` assigns stable keys during the first render. Items no longer mount twice with placeholder keys.
+- `register()` returns a stable ref callback per field, so React no longer detaches and re-attaches inputs on every render. Composed refs that call `ref(null)` still unregister correctly, and an input that stays mounted after `unregister()` registers again on its next render.
+- Standard Schema adapter: spec `PathSegment` objects (`{ key }`, used by Valibot) map to field paths instead of `"[object Object]"`.
+- `resetField` restores a cloned default so later mutations cannot alias `defaultValues`.
+- A deferred `shouldUnregister` task queued before a StrictMode remount no longer fires after the remount.
+
+### Changed
+
+- `handleSubmit` accepts any event with an optional `preventDefault` (for example button click events) or no argument. This is a type widening; existing call sites keep compiling.
+- `dirtyFields` is computed once per values/defaults snapshot and shared by `useForm`, `useFormState`, `useFieldState`, `useController`, and getters (fewer full-tree comparisons per keystroke). Because the map is shared, it is now frozen; copy it before mutating.
+- Blurring an already-touched field no longer notifies subscribers.
+- New exported type `StandardSchemaV1PathSegment` from `@muradyanvano/use-form/resolvers/standard-schema`.
+
+### Deprecated
+
+- `ResetOptions.keepDirty` and `SetValueOptions.shouldDirty` are documented as no-ops (dirty state is derived from values vs defaults). They remain accepted.
+
+### Documentation
+
+- README examples are complete modules and are type-checked against the packed package in `test:package`. Fixed examples that used a non-existent `useController` `defaultValue` option, missing imports, and invalid field paths. Added a submission and server-errors section.
+- Documented submission lifecycle, `handleSubmit` rejection, concurrent `isValidating`, and Standard Schema path segments.
+
+### Tooling
+
+- Added `.gitattributes` (LF line endings) so `format:check` passes on Windows checkouts.
+- Storybook test runner fails stories that log console or page errors. Fixed a docs page that rendered `<T>` as an HTML element.
+- Updated dev tooling to fix security advisories: Storybook 10.6.3 (critical dev-server code injection), Vite 8.3.5, Vitest 4.1.12, plus transitive fixes via `npm audit fix`. The package still has no runtime dependencies.
+
 ## [0.1.3] - 2026-09-17
 
 ### Package metadata

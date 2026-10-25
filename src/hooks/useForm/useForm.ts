@@ -8,7 +8,6 @@ import {
   useState,
   useSyncExternalStore,
   type ChangeEvent,
-  type SubmitEvent,
 } from 'react'
 import type {
   FieldErrors,
@@ -118,7 +117,6 @@ import {
   stripServerIssuesUnder,
   stripValidationIssueAtPath,
   syncErrorViews,
-  type FieldError,
   type FieldErrorDetails,
   type SetErrorsInput,
   type ValidationIssueInput,
@@ -352,19 +350,26 @@ export function useForm<
 
   const mountedRef = useRef(true)
   const isSubmittingRef = useRef(false)
+  /**
+   * Incremented per submit attempt and by `reset()` (unless `keepIsSubmitted`) so stale submit
+   * cycles cannot write state.
+   */
+  const submitCycleRef = useRef(0)
   /** Whole-form validation epoch — also invalidates in-flight field results. */
   const formValidationGenerationRef = useRef(0)
   /** Per-path epochs so concurrent field validations do not cancel each other. */
   const fieldValidationGenerationsRef = useRef(new Map<string, number>())
   const fieldOrderRef = useRef<Array<FieldPath<T>>>([])
   const fieldElementsRef = useRef(new Map<string, Set<FocusableFieldElement>>())
+  /** Cached `register()` ref callbacks keyed by element id + path (see `getFieldRef`). */
+  const fieldRefsRef = useRef(new Map<string, { name: string; ref: FieldProps['ref'] }>())
   const controllerCountsRef = useRef(new Map<string, number>())
   const fieldUnregisterOptionRef = useRef(new Map<string, boolean | undefined>())
   const inactivePathsRef = useRef(new Set<string>())
   const [unregisterScheduler] = useState(() => createDeferredUnregisterScheduler())
   const fieldArrayMutationEpochRef = useRef(0)
   /** Stable React keys for field arrays — never stored in form values. */
-  const fieldArrayKeysRef = useRef(new Map<string, string[]>())
+  const fieldArrayKeysRef = useRef(new Map<string, readonly string[]>())
   const nextFieldArrayKeyRef = useRef(0)
   /** Invalidates scheduled field-array focus when mutations race or the form unmounts. */
   const fieldArrayFocusGenerationRef = useRef(0)
@@ -375,6 +380,11 @@ export function useForm<
   const [validationScheduler] = useState(() => createFieldValidationScheduler())
   const dependencyIndexRef = useRef<DependencyIndex>(buildDependencyIndex(dependencies))
   const validatedFieldsRef = useRef(new Set<string>())
+  /**
+   * In-flight validation runs that have not been superseded. `isValidating` is derived
+   * from this map on every commit. Values are the field path (`null` for whole-form runs).
+   */
+  const activeValidationsRef = useRef(new Map<object, string | null>())
   const batchQueueRef = useRef(createBatchValidationQueue())
   const outerBatchCompletionRef = useRef<{
     promise: Promise<void>
@@ -438,6 +448,7 @@ export function useForm<
     resolverAbortRef.current = null
     validationScheduler.cancelAll()
     abortAllFieldSignals()
+    activeValidationsRef.current.clear()
   }, [abortAllFieldSignals, validationScheduler])
 
   const beginResolverSignal = useCallback((): AbortSignal | undefined => {
@@ -513,11 +524,45 @@ export function useForm<
   const commitState = useCallback(
     (recipe: (prev: FormInternalState<T>) => FormInternalState<T>) => {
       const prev = store.getState()
-      const next = recipe(prev)
+      const draft = recipe(prev)
+      const isValidating = activeValidationsRef.current.size > 0
+      const next = draft.isValidating === isValidating ? draft : { ...draft, isValidating }
       store.setState(next)
       return next
     },
     [store],
+  )
+
+  const startValidationRun = useCallback(
+    (name: string | null): object => {
+      const token = {}
+      activeValidationsRef.current.set(token, name)
+      if (mountedRef.current) {
+        commitState((prev) => prev)
+      }
+      return token
+    },
+    [commitState],
+  )
+
+  /** Drop runs for one field path (or every field path under `root`) that newer work superseded. */
+  const supersedeFieldValidationRuns = useCallback((predicate: (name: string) => boolean) => {
+    for (const [token, name] of activeValidationsRef.current) {
+      if (name !== null && predicate(name)) {
+        activeValidationsRef.current.delete(token)
+      }
+    }
+  }, [])
+
+  /** Mark a run finished and publish the recomputed `isValidating` flag when it changed. */
+  const settleValidationRun = useCallback(
+    (token: object) => {
+      activeValidationsRef.current.delete(token)
+      if (mountedRef.current) {
+        commitState((prev) => prev)
+      }
+    },
+    [commitState],
   )
 
   const assertNotInBatch = useCallback(
@@ -535,12 +580,16 @@ export function useForm<
     }
   }, [])
 
-  const nextFieldGeneration = useCallback((name: FieldPath<T>) => {
-    const current = fieldValidationGenerationsRef.current.get(name) ?? 0
-    const next = current + 1
-    fieldValidationGenerationsRef.current.set(name, next)
-    return next
-  }, [])
+  const nextFieldGeneration = useCallback(
+    (name: FieldPath<T>) => {
+      const current = fieldValidationGenerationsRef.current.get(name) ?? 0
+      const next = current + 1
+      fieldValidationGenerationsRef.current.set(name, next)
+      supersedeFieldValidationRuns((path) => path === name)
+      return next
+    },
+    [supersedeFieldValidationRuns],
+  )
 
   const cancelFieldValidationWork = useCallback(
     (name: string) => {
@@ -588,8 +637,9 @@ export function useForm<
           fieldValidationGenerationsRef.current.set(path, current + 1)
         }
       }
+      supersedeFieldValidationRuns((path) => isSameOrDescendantPath(path, root))
     },
-    [abortFieldSignal, unregisterScheduler, validationScheduler],
+    [abortFieldSignal, supersedeFieldValidationRuns, unregisterScheduler, validationScheduler],
   )
 
   const restoreInactiveField = useCallback(
@@ -618,6 +668,11 @@ export function useForm<
 
       fieldOrderRef.current = omitPathsFromList(fieldOrderRef.current, root) as Array<FieldPath<T>>
       clearFieldElementsUnder(fieldElementsRef.current, root)
+      for (const [cacheKey, entry] of [...fieldRefsRef.current]) {
+        if (isSameOrDescendantPath(entry.name, root)) {
+          fieldRefsRef.current.delete(cacheKey)
+        }
+      }
 
       for (const path of [...controllerCountsRef.current.keys()]) {
         if (isSameOrDescendantPath(path, root)) {
@@ -741,25 +796,6 @@ export function useForm<
     [maybeScheduleAutomaticUnregister],
   )
 
-  const applyValidationResult = useCallback(
-    (
-      generation: number,
-      errorDetails: FieldErrorDetails<T>,
-      rootErrorDetails: FieldError | undefined,
-    ) => {
-      if (!mountedRef.current || generation !== formValidationGenerationRef.current) {
-        return
-      }
-
-      commitState((prev) => ({
-        ...prev,
-        ...syncErrorViews(errorDetails, rootErrorDetails),
-        isValidating: false,
-      }))
-    },
-    [commitState],
-  )
-
   const validateInternal = useCallback(
     async (
       values: T,
@@ -778,9 +814,9 @@ export function useForm<
       })
       const signal = beginResolverSignal()
 
-      if (mountedRef.current) {
-        commitState((prev) => ({ ...prev, isValidating: true }))
-      }
+      // A whole-form run supersedes every earlier form and field run.
+      activeValidationsRef.current.clear()
+      const run = startValidationRun(null)
 
       try {
         const result = await runValidationPipeline<TInput, TOutput, TContext>({
@@ -807,30 +843,31 @@ export function useForm<
         for (const path of Object.keys(result.errors)) {
           validatedFieldsRef.current.add(path)
         }
-        applyValidationResult(generation, result.errorDetails, result.rootErrorDetails)
+        activeValidationsRef.current.delete(run)
+        commitState((prev) => ({
+          ...prev,
+          ...syncErrorViews(result.errorDetails, result.rootErrorDetails),
+        }))
         return result
       } catch (error) {
         if (error instanceof Error && error.name === 'AbortError') {
-          if (mountedRef.current && generation === formValidationGenerationRef.current) {
-            commitState((prev) => ({ ...prev, isValidating: false }))
-          }
           return {
             errors: store.getState().errors,
             rootError: store.getState().rootError,
             output: undefined,
           }
         }
-        if (mountedRef.current && generation === formValidationGenerationRef.current) {
-          commitState((prev) => ({ ...prev, isValidating: false }))
-        }
         throw error
+      } finally {
+        settleValidationRun(run)
       }
     },
     [
       abortAllFieldSignals,
-      applyValidationResult,
       beginResolverSignal,
       commitState,
+      settleValidationRun,
+      startValidationRun,
       store,
       validationScheduler,
     ],
@@ -845,10 +882,7 @@ export function useForm<
       const formGeneration = formValidationGenerationRef.current
       const fieldGeneration = nextFieldGeneration(name)
       const signal = beginFieldSignal(name)
-
-      if (mountedRef.current) {
-        commitState((prev) => ({ ...prev, isValidating: true }))
-      }
+      const run = startValidationRun(name)
 
       try {
         const result = await runFieldValidationPipeline<TInput, TOutput, TContext>({
@@ -878,6 +912,7 @@ export function useForm<
         }
 
         validatedFieldsRef.current.add(name)
+        activeValidationsRef.current.delete(run)
         commitState((prev) => {
           const nextDetails = setFieldErrorDetail(prev.errorDetails, name, result.error)
           const nextRoot =
@@ -885,33 +920,20 @@ export function useForm<
           return {
             ...prev,
             ...syncErrorViews(nextDetails, nextRoot),
-            isValidating: false,
           }
         })
 
         return result
       } catch (error) {
         if (error instanceof Error && error.name === 'AbortError') {
-          if (
-            mountedRef.current &&
-            formGeneration === formValidationGenerationRef.current &&
-            fieldGeneration === fieldValidationGenerationsRef.current.get(name)
-          ) {
-            commitState((prev) => ({ ...prev, isValidating: false }))
-          }
           return { message: undefined, rootError: undefined }
         }
-        if (
-          mountedRef.current &&
-          formGeneration === formValidationGenerationRef.current &&
-          fieldGeneration === fieldValidationGenerationsRef.current.get(name)
-        ) {
-          commitState((prev) => ({ ...prev, isValidating: false }))
-        }
         throw error
+      } finally {
+        settleValidationRun(run)
       }
     },
-    [beginFieldSignal, commitState, nextFieldGeneration],
+    [beginFieldSignal, commitState, nextFieldGeneration, settleValidationRun, startValidationRun],
   )
 
   const validateFieldInternal = useCallback(
@@ -974,7 +996,6 @@ export function useForm<
                 setFieldErrorDetail(prev.errorDetails, name, error),
                 prev.rootErrorDetails,
               ),
-              isValidating: false,
             }
           })
         }
@@ -997,7 +1018,6 @@ export function useForm<
               stripValidationIssueAtPath(prev.errorDetails, name),
               prev.rootErrorDetails,
             ),
-            isValidating: false,
           }))
         }
 
@@ -1036,11 +1056,8 @@ export function useForm<
         name,
         fieldGeneration: nextFieldGeneration(name),
         signal: beginFieldSignal(name),
+        run: startValidationRun(name),
       }))
-
-      if (mountedRef.current) {
-        commitState((prev) => ({ ...prev, isValidating: true }))
-      }
 
       try {
         const results = await Promise.all(
@@ -1085,6 +1102,9 @@ export function useForm<
           return
         }
 
+        for (const { run } of planned) {
+          activeValidationsRef.current.delete(run)
+        }
         commitState((prev) => {
           let nextDetails = prev.errorDetails
           let nextRoot = prev.rootErrorDetails
@@ -1102,7 +1122,6 @@ export function useForm<
           return {
             ...prev,
             ...syncErrorViews(nextDetails, nextRoot),
-            isValidating: false,
           }
         })
       } catch (error) {
@@ -1111,15 +1130,18 @@ export function useForm<
           formGeneration === formValidationGenerationRef.current &&
           !(error instanceof Error && error.name === 'AbortError')
         ) {
-          commitState((prev) => ({ ...prev, isValidating: false }))
           throw error
         }
-        if (mountedRef.current && formGeneration === formValidationGenerationRef.current) {
-          commitState((prev) => ({ ...prev, isValidating: false }))
+      } finally {
+        for (const { run } of planned) {
+          activeValidationsRef.current.delete(run)
+        }
+        if (mountedRef.current) {
+          commitState((prev) => prev)
         }
       }
     },
-    [beginFieldSignal, commitState, nextFieldGeneration],
+    [beginFieldSignal, commitState, nextFieldGeneration, startValidationRun],
   )
 
   const scheduleDependentRevalidation = useCallback(
@@ -1417,10 +1439,11 @@ export function useForm<
   const blurField = useCallback(
     (name: FieldPath<T>) => {
       markFieldRegistered(name)
-      commitState((prev) => ({
-        ...prev,
-        touched: { ...prev.touched, [name]: true },
-      }))
+      commitState((prev) =>
+        prev.touched[name] === true
+          ? prev
+          : { ...prev, touched: { ...prev.touched, [name]: true } },
+      )
 
       if (
         shouldValidateOnBlur(
@@ -1753,6 +1776,10 @@ export function useForm<
     (nextValues?: DeepPartial<T>, resetOptions?: ResetOptions<T>) => {
       bumpFormValidationGeneration()
       isSubmittingRef.current = false
+      // `keepIsSubmitted` lets an in-flight submit still finish as submitted.
+      if (!resetOptions?.keepIsSubmitted) {
+        submitCycleRef.current += 1
+      }
       validatedFieldsRef.current.clear()
       clearQueuedValidation(batchQueueRef.current)
 
@@ -1837,7 +1864,7 @@ export function useForm<
       dropQueuedPathsUnder(batchQueueRef.current, name)
 
       commitState((prev) => {
-        const restoredValue = readFieldValue(prev.defaultValues, name)
+        const restoredValue = cloneFormValue(readFieldValue(prev.defaultValues, name))
         let nextTouched = { ...prev.touched }
         let nextDetails = prev.errorDetails
 
@@ -1893,7 +1920,7 @@ export function useForm<
   }, [reset, setError, setErrors, setSubmitError])
 
   const handleSubmit = useCallback(
-    (event?: SubmitEvent<HTMLFormElement>) => {
+    (event?: { preventDefault?: () => void }) => {
       if (event && typeof event.preventDefault === 'function') {
         event.preventDefault()
       }
@@ -1918,6 +1945,8 @@ export function useForm<
         }
 
         isSubmittingRef.current = true
+        const cycle = ++submitCycleRef.current
+        const isCurrentCycle = () => cycle === submitCycleRef.current
 
         const currentValues = store.getState().values
         const leafPaths = listLeafFieldPaths(currentValues)
@@ -1938,12 +1967,14 @@ export function useForm<
           submitCount: prev.submitCount + 1,
         }))
 
-        const finishSubmitting = (extra?: Partial<FormInternalState<T>>) => {
+        // `reset()` during the cycle (including `helpers.reset()` inside `onSubmit`) wins:
+        // a stale cycle must not mark the freshly reset form as submitted.
+        const finishSubmitting = () => {
+          if (!isCurrentCycle()) return
           isSubmittingRef.current = false
           if (mountedRef.current) {
             commitState((prev) => ({
               ...prev,
-              ...extra,
               isSubmitting: false,
               isSubmitted: true,
             }))
@@ -1958,9 +1989,11 @@ export function useForm<
           // A reset, field-array mutation, or newer validation invalidated this submit cycle.
           // Do not submit output produced from a stale input snapshot.
           if (!mountedRef.current || validationGeneration !== formValidationGenerationRef.current) {
-            isSubmittingRef.current = false
-            if (mountedRef.current) {
-              commitState((prev) => (prev.isSubmitting ? { ...prev, isSubmitting: false } : prev))
+            if (isCurrentCycle()) {
+              isSubmittingRef.current = false
+              if (mountedRef.current) {
+                commitState((prev) => (prev.isSubmitting ? { ...prev, isSubmitting: false } : prev))
+              }
             }
             return
           }
@@ -2069,6 +2102,57 @@ export function useForm<
     [store],
   )
 
+  /**
+   * One ref callback per path + element id, stable across renders, so React does not
+   * detach and re-attach every registered element on each form re-render.
+   * React 19 uses the returned cleanup. Callers that compose the ref and drop the cleanup
+   * call `ref(null)` instead, which detaches the single attached element (or, if several
+   * elements share the callback, the ones React has removed from the document).
+   * Entries are evicted by `unregister` (so a still-mounted input re-registers on its next
+   * render) and once no element has been attached for a microtask.
+   */
+  const getFieldRef = useCallback(
+    (name: FieldPath<T>, fieldId: string): FieldProps['ref'] => {
+      const cacheKey = `${fieldId}\u0000${name}`
+      const cached = fieldRefsRef.current.get(cacheKey)
+      if (cached) return cached.ref
+      const attached = new Set<HTMLElement>()
+      const disconnect = (element: HTMLElement) => {
+        if (!attached.delete(element)) return
+        controlBridge.handlers.disconnectElement(name, element)
+        if (attached.size === 0) {
+          queueMicrotask(() => {
+            if (attached.size === 0 && fieldRefsRef.current.get(cacheKey)?.ref === ref) {
+              fieldRefsRef.current.delete(cacheKey)
+            }
+          })
+        }
+      }
+      const ref: FieldProps['ref'] = (element) => {
+        if (!element) {
+          if (attached.size <= 1) {
+            for (const candidate of [...attached]) disconnect(candidate)
+            return
+          }
+          queueMicrotask(() => {
+            for (const candidate of [...attached]) {
+              if (!candidate.isConnected) disconnect(candidate)
+            }
+          })
+          return
+        }
+        attached.add(element)
+        controlBridge.handlers.connectElement(name, element)
+        return () => {
+          disconnect(element)
+        }
+      }
+      fieldRefsRef.current.set(cacheKey, { name, ref })
+      return ref
+    },
+    [controlBridge],
+  )
+
   const createFieldProps = useCallback(
     <K extends FieldPath<T>>(name: K, registerOptions?: RegisterOptions<T, K>): FieldProps => {
       markFieldRegistered(name)
@@ -2103,23 +2187,10 @@ export function useForm<
         blurField(name)
       }
 
-      let attached: FocusableFieldElement | null = null
-      const ref: FieldProps['ref'] = (element) => {
-        if (attached && attached !== element) {
-          disconnectElement(name, attached)
-        }
-        attached = element
-        if (element) {
-          connectElement(name, element)
-        } else if (!hasLiveRegistration(name)) {
-          maybeScheduleAutomaticUnregister(name, fieldArrayMutationEpochRef.current)
-        }
-      }
-
       const base: FieldProps = {
         name,
         id: fieldId,
-        ref,
+        ref: getFieldRef(name, fieldId),
         onChange,
         onBlur,
         'aria-invalid': hasError || undefined,
@@ -2161,12 +2232,9 @@ export function useForm<
     },
     [
       blurField,
-      connectElement,
-      disconnectElement,
       formId,
-      hasLiveRegistration,
+      getFieldRef,
       markFieldRegistered,
-      maybeScheduleAutomaticUnregister,
       parseIncomingValue,
       rememberFieldUnregisterOption,
       setValue,

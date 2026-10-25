@@ -84,6 +84,8 @@ There is no `keepDirty` (derived) and no `keepDependencies` (the consumer map is
 
 Repeated unregister is a no-op. Unsafe paths (`__proto__`, …) throw.
 
+Unregistering a native input that is still mounted removes its registration until that input renders again with `register(name)`; it then reconnects (and an inactive optional path is restored from defaults, as on remount).
+
 ## Validation participation
 
 ### Preserved-value unregister (`keepValue: true`)

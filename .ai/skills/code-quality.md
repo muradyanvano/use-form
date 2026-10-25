@@ -22,6 +22,8 @@ See `.ai/skills/package-release.md` for packing, size, Storybook, and TypeDoc. A
 
 Use `npm run format` to apply Prettier; use `npm run format:check` to verify without writing.
 
+`.gitattributes` forces LF (`* text=auto eol=lf`). Prettier expects LF, so do not remove it — Windows checkouts with `core.autocrlf=true` would otherwise fail `format:check` on every file.
+
 ## ESLint
 
 - Flat config in `eslint.config.js` uses `typescript-eslint` **`recommendedTypeChecked`** with `parserOptions.projectService`.

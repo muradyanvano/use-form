@@ -95,6 +95,9 @@ A field may include several `rules.async` entries, but they share **one** field-
 ## Validation state
 
 - `isValidating` is `true` only while validators/resolvers **execute**.
+- With several fields validating concurrently, `isValidating` stays `true` until the last
+  non-superseded run settles. Runs replaced by newer work for the same field, a whole-form
+  validation, `reset()`, or a field-array mutation no longer count.
 - Pending debounce delay is **not** represented by `isValidating`.
 - No `isDebouncing` flag in this phase.
 

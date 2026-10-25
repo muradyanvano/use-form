@@ -78,18 +78,22 @@ export function LoginForm() {
   return (
     <form onSubmit={form.handleSubmit} noValidate>
       <label htmlFor={form.getFieldId('email')}>Email</label>
-      <input {...form.register('email')} id={form.getFieldId('email')} type="email" />
+      <input {...form.register('email')} type="email" />
       {form.errors.email ? <p id={form.getErrorId('email')}>{form.errors.email}</p> : null}
 
       <label htmlFor={form.getFieldId('password')}>Password</label>
-      <input {...form.register('password')} id={form.getFieldId('password')} type="password" />
+      <input {...form.register('password')} type="password" />
       {form.errors.password ? <p id={form.getErrorId('password')}>{form.errors.password}</p> : null}
 
-      <button type="submit">Sign in</button>
+      <button type="submit" disabled={form.isSubmitting}>
+        Sign in
+      </button>
     </form>
   )
 }
 ```
+
+`register()` supplies `name`, `id`, `value`/`checked`, `onChange`, `onBlur`, `ref`, `aria-invalid`, and `aria-describedby` (pointing at `getErrorId(name)` while the field has an error).
 
 Form hooks are **client components**. In React Server Component apps, import them from a file marked `'use client'`.
 
@@ -98,16 +102,75 @@ Form hooks are **client components**. In React Server Component apps, import the
 ```tsx
 import { rules, useForm, ValidationMode } from '@muradyanvano/use-form'
 
-const form = useForm({
-  defaultValues: { age: '' },
-  mode: ValidationMode.OnBlur,
-  rules: {
-    age: [rules.required(), rules.min(18)],
-  },
-})
+export function AgeForm() {
+  const form = useForm({
+    defaultValues: { nickname: '', age: 0 },
+    mode: ValidationMode.OnBlur,
+    rules: {
+      nickname: [rules.required(), rules.minLength(3)],
+      age: [rules.required(), rules.min(18)],
+    },
+  })
+
+  return (
+    <form onSubmit={form.handleSubmit} noValidate>
+      <label htmlFor={form.getFieldId('nickname')}>Nickname</label>
+      <input {...form.register('nickname')} />
+      {form.errors.nickname ? <p id={form.getErrorId('nickname')}>{form.errors.nickname}</p> : null}
+
+      <label htmlFor={form.getFieldId('age')}>Age</label>
+      <input {...form.register('age', { valueAsNumber: true })} type="number" />
+      {form.errors.age ? <p id={form.getErrorId('age')}>{form.errors.age}</p> : null}
+
+      <button type="submit">Save</button>
+    </form>
+  )
+}
 ```
 
-See [docs/validation.md](docs/validation.md) and [docs/async-validation.md](docs/async-validation.md).
+Rules are typed against the field value: `rules.min` only accepts number fields and `rules.minLength` only string fields. See [docs/validation.md](docs/validation.md) and [docs/async-validation.md](docs/async-validation.md).
+
+## Submission and server errors
+
+`handleSubmit` validates first and calls `onSubmit` only when the form is valid. Map backend failures with the submit helpers; `handleSubmit` rejects if `onSubmit` throws, so catch expected API failures yourself:
+
+```tsx
+import { useForm } from '@muradyanvano/use-form'
+
+declare function saveProfile(values: {
+  email: string
+}): Promise<{ fieldErrors?: { email?: string } }>
+
+export function ProfileForm() {
+  const form = useForm({
+    defaultValues: { email: '' },
+    onSubmit: async (values, helpers) => {
+      try {
+        const result = await saveProfile(values)
+        if (result.fieldErrors) {
+          helpers.setErrors(result.fieldErrors, { source: 'server' })
+          return
+        }
+        helpers.reset(values)
+      } catch {
+        helpers.setSubmitError('Could not save. Try again.')
+      }
+    },
+  })
+
+  return (
+    <form onSubmit={form.handleSubmit} noValidate>
+      <input {...form.register('email')} type="email" aria-label="Email" />
+      {form.submitError ? <p role="alert">{form.submitError}</p> : null}
+      <button type="submit" disabled={form.isSubmitting}>
+        Save
+      </button>
+    </form>
+  )
+}
+```
+
+`helpers.reset()` inside `onSubmit` leaves a fresh, unsubmitted form (`isSubmitted: false`, `submitCount: 0`) unless you pass `keepIsSubmitted` / `keepSubmitCount`.
 
 ## TypeScript example
 
@@ -119,12 +182,17 @@ type Profile = {
   address: { city: string }
 }
 
-const form = useForm<Profile>({
-  defaultValues: { email: '', address: { city: '' } },
-})
+export function useProfileForm() {
+  const form = useForm<Profile>({
+    defaultValues: { email: '', address: { city: '' } },
+  })
 
-const path: FieldPath<Profile> = 'address.city'
-form.setValue(path, 'Yerevan')
+  const path: FieldPath<Profile> = 'address.city'
+  form.setValue(path, 'Yerevan')
+  // @ts-expect-error -- unknown paths fail at compile time
+  form.setValue('address.zip', '0010')
+  return form
+}
 ```
 
 Path inference stops at depth 5. Invalid paths fail at compile time.
@@ -132,18 +200,18 @@ Path inference stops at depth 5. Invalid paths fail at compile time.
 ## Controlled-component example
 
 ```tsx
-import { useController, useForm } from '@muradyanvano/use-form'
+import { useController, useForm, type FormControl } from '@muradyanvano/use-form'
 
-function RatingField({ control }: { control: ReturnType<typeof useForm>['control'] }) {
-  const { field, fieldState } = useController({
-    control,
-    name: 'rating',
-    defaultValue: 0,
-  })
+type Review = { rating: number }
+
+function RatingField({ control }: { control: FormControl<Review> }) {
+  const { field, fieldState } = useController({ control, name: 'rating' })
 
   return (
     <>
+      <label htmlFor={field.id}>Rating</label>
       <input
+        id={field.id}
         type="range"
         min={0}
         max={5}
@@ -151,10 +219,19 @@ function RatingField({ control }: { control: ReturnType<typeof useForm>['control
         onChange={(event) => {
           field.onChange(Number(event.target.value))
         }}
+        onBlur={field.onBlur}
+        ref={field.ref}
+        aria-invalid={field['aria-invalid']}
+        aria-describedby={field['aria-describedby']}
       />
-      {fieldState.error ? <p>{fieldState.error}</p> : null}
+      {fieldState.error ? <p id={field.errorId}>{fieldState.error}</p> : null}
     </>
   )
+}
+
+export function ReviewForm() {
+  const form = useForm<Review>({ defaultValues: { rating: 0 } })
+  return <RatingField control={form.control} />
 }
 ```
 
@@ -165,15 +242,31 @@ See [docs/controlled-components.md](docs/controlled-components.md).
 ```tsx
 import { useFieldArray, useForm } from '@muradyanvano/use-form'
 
-type FormValues = { items: Array<{ name: string }> }
+type OrderValues = { items: Array<{ name: string }> }
 
-const form = useForm<FormValues>({ defaultValues: { items: [] } })
-const items = useFieldArray({ control: form.control, name: 'items' })
+export function OrderForm() {
+  const form = useForm<OrderValues>({ defaultValues: { items: [] } })
+  const items = useFieldArray({ control: form.control, name: 'items' })
 
-items.append({ name: '' })
+  return (
+    <>
+      {items.fields.map((item, index) => (
+        <div key={item.key}>
+          <input {...form.register(`items.${index}.name`)} aria-label={`Item ${index + 1}`} />
+          <button type="button" onClick={() => items.remove(index)}>
+            Remove
+          </button>
+        </div>
+      ))}
+      <button type="button" onClick={() => items.append({ name: '' })}>
+        Add item
+      </button>
+    </>
+  )
+}
 ```
 
-One index level only. See [docs/field-arrays.md](docs/field-arrays.md).
+Use `field.key` (not the index) as the React key. One index level only. See [docs/field-arrays.md](docs/field-arrays.md).
 
 ## Async validation and defaults
 
@@ -184,12 +277,22 @@ One index level only. See [docs/field-arrays.md](docs/field-arrays.md).
 
 ```tsx
 import { useForm } from '@muradyanvano/use-form'
-import { standardSchemaResolver } from '@muradyanvano/use-form/resolvers/standard-schema'
+import {
+  standardSchemaResolver,
+  type StandardSchemaV1,
+} from '@muradyanvano/use-form/resolvers/standard-schema'
 
-const form = useForm({
-  defaultValues: { email: '' },
-  resolver: standardSchemaResolver(yourStandardSchema),
-})
+type SignupValues = { email: string }
+
+// Any Standard Schema v1 implementation (Zod 4, Valibot, ArkType, …) works here.
+declare const signupSchema: StandardSchemaV1<SignupValues>
+
+export function useSignupForm() {
+  return useForm({
+    defaultValues: { email: '' },
+    resolver: standardSchemaResolver(signupSchema),
+  })
+}
 ```
 
 The adapter has **no React import** and may run on the server. It is **not** exported from the core entry. See [docs/schema-resolvers.md](docs/schema-resolvers.md).
@@ -200,14 +303,16 @@ The adapter has **no React import** and may run on the server. It is **not** exp
 import { FormProvider, useForm } from '@muradyanvano/use-form'
 import { FormDevTools } from '@muradyanvano/use-form/devtools'
 
-const form = useForm({ defaultValues: { email: '' } })
+export function DebuggableForm() {
+  const form = useForm({ defaultValues: { email: '' } })
 
-return (
-  <FormProvider control={form.control}>
-    {/* fields */}
-    {import.meta.env.DEV ? <FormDevTools control={form.control} /> : null}
-  </FormProvider>
-)
+  return (
+    <FormProvider control={form.control}>
+      <input {...form.register('email')} aria-label="Email" />
+      {import.meta.env.DEV ? <FormDevTools control={form.control} /> : null}
+    </FormProvider>
+  )
+}
 ```
 
 DevTools requires `react-dom` (portals). Do not ship it as production UI. See [docs/devtools.md](docs/devtools.md).

@@ -39,6 +39,11 @@ export function isAtomicValue(value: unknown): boolean {
   return !isPlainObject(value)
 }
 
+/** `__proto__`, `prototype`, and `constructor` can never be form path segments. */
+export function isUnsafePathSegment(segment: string): boolean {
+  return UNSAFE_SEGMENTS.has(segment)
+}
+
 export function isNumericPathSegment(segment: string): boolean {
   return /^\d+$/.test(segment)
 }
@@ -68,9 +73,15 @@ export function getValueAtPath(values: unknown, path: string): unknown {
   let current: unknown = values
 
   for (const segment of segments) {
-    if (current === null || current === undefined) return undefined
-    if (!isPlainObject(current) && !Array.isArray(current)) return undefined
-    current = (current as Record<string, unknown>)[segment]
+    if (Array.isArray(current)) {
+      if (!isNumericPathSegment(segment)) return undefined
+      current = current[Number(segment)]
+      continue
+    }
+    if (!isPlainObject(current) || !Object.prototype.hasOwnProperty.call(current, segment)) {
+      return undefined
+    }
+    current = current[segment]
   }
 
   return current
@@ -197,6 +208,7 @@ export function cloneFormValue<T>(value: T): T {
 
   const result: Record<string, unknown> = {}
   for (const key of Object.keys(value)) {
+    if (UNSAFE_SEGMENTS.has(key)) continue
     result[key] = cloneFormValue(value[key])
   }
   return result as T
@@ -219,6 +231,7 @@ export function mergeDeepPartial<T>(base: T, partial: DeepPartial<T>): T {
 
   const result: Record<string, unknown> = { ...base }
   for (const key of Object.keys(partial)) {
+    if (UNSAFE_SEGMENTS.has(key)) continue
     const nextValue = (partial as Record<string, unknown>)[key]
     if (nextValue === undefined) continue
 

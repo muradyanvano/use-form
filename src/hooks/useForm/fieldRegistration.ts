@@ -277,10 +277,11 @@ export function createDeferredUnregisterScheduler(
       return pending.has(path)
     },
     dispose() {
+      // Keep the counters: StrictMode re-runs effects after dispose, and a reset counter
+      // would let an already-queued task match a newly scheduled generation.
       for (const path of [...generations.keys()]) {
         bump(path)
       }
-      generations.clear()
     },
   }
 }

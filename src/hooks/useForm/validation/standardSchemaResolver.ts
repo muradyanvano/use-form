@@ -1,5 +1,6 @@
 import type { FieldErrorDetails, FieldIssue } from '../errors.ts'
 import { ErrorSource, fieldErrorFromIssues, toFieldErrors } from '../errors.ts'
+import { isUnsafePathSegment } from '../pathUtilities.ts'
 
 /**
  * Minimal Standard Schema v1 surface used by {@link standardSchemaResolver}.
@@ -7,9 +8,14 @@ import { ErrorSource, fieldErrorFromIssues, toFieldErrors } from '../errors.ts'
  *
  * @see https://standardschema.dev/
  */
+/** Object path segment from the spec (emitted by e.g. Valibot). */
+export type StandardSchemaV1PathSegment = {
+  readonly key: PropertyKey
+}
+
 export type StandardSchemaV1Issue = {
   message: string
-  path?: readonly (string | number | symbol)[]
+  path?: readonly (PropertyKey | StandardSchemaV1PathSegment)[] | undefined
 }
 
 export type StandardSchemaV1Result<TOutput> =
@@ -22,10 +28,12 @@ export type StandardSchemaV1<TInput = unknown, TOutput = TInput> = {
     readonly validate: (
       value: unknown,
     ) => StandardSchemaV1Result<TOutput> | Promise<StandardSchemaV1Result<TOutput>>
-    readonly types?: {
-      readonly input: TInput
-      readonly output: TOutput
-    }
+    readonly types?:
+      | {
+          readonly input: TInput
+          readonly output: TOutput
+        }
+      | undefined
   }
 }
 
@@ -44,14 +52,18 @@ function toResolverIssue(issue: StandardSchemaV1Issue): FieldIssue | undefined {
     source: ErrorSource.Resolver,
   }
 }
+
 export function issuePathToDotPath(
-  path: readonly (string | number | symbol)[] | undefined,
+  path: readonly (PropertyKey | StandardSchemaV1PathSegment)[] | undefined,
 ): string | null {
   if (!path || path.length === 0) return null
   const segments: string[] = []
-  for (const segment of path) {
+  for (const entry of path) {
+    const segment = typeof entry === 'object' && entry !== null ? entry.key : entry
     if (typeof segment === 'symbol') return null
-    segments.push(String(segment))
+    const key = String(segment)
+    if (isUnsafePathSegment(key)) return null
+    segments.push(key)
   }
   return segments.join('.')
 }
@@ -59,7 +71,8 @@ export function issuePathToDotPath(
 /**
  * Build a form resolver from a Standard Schema–compatible schema.
  *
- * Pathless / empty / symbol-segment issues become `rootError` (first wins).
+ * Pathless / empty / symbol-segment issues, and paths containing `__proto__` / `prototype` /
+ * `constructor`, become `rootError` (first wins).
  * Field issues use first-message-wins per path. A non-empty `issues` array always yields
  * `success: false` — never accidental submission success.
  */

@@ -43,7 +43,17 @@ The selector receives a snapshot that includes derived `dirtyFields`, `isDirty`,
 const { error, errorDetails, invalid, touched, dirty, isValidating } = useFieldState(form, 'email')
 ```
 
-`isValidating` currently mirrors the form-level flag and is `true` only while validators/resolvers execute. Pending debounce delay from `rules.async` is **not** counted as validating (see `docs/async-validation.md`). Per-field pending flags are not exposed yet.
+`isValidating` currently mirrors the form-level flag and is `true` while any non-superseded validator/resolver run executes (concurrent field runs are tracked individually). Pending debounce delay from `rules.async` is **not** counted as validating (see `docs/async-validation.md`). Per-field pending flags are not exposed yet.
+
+`dirtyFields` is computed once per `(values, defaultValues)` snapshot and shared by `useForm`, `useFormState`, `useFieldState`, `useController`, and the getters. It is frozen; copy it before mutating.
+
+## Submission lifecycle
+
+`handleSubmit` marks every registered and leaf path touched, increments `submitCount`, sets `isSubmitting`, validates, focuses the first invalid field (when `focusOnError`), and calls `onSubmit` only for a valid form. It then sets `isSubmitting: false` and `isSubmitted: true`.
+
+- `reset()` during a submit cycle — including `helpers.reset()` inside `onSubmit` — wins: the form stays unsubmitted (`isSubmitted: false`, `submitCount: 0`). With `keepSubmitCount` the count is kept; with `keepIsSubmitted` the in-flight submit still finishes as `isSubmitted: true`.
+- `handleSubmit` returns a promise that **rejects** when `onSubmit` or a validator throws. React ignores the promise returned from `<form onSubmit>`, so catch expected API failures inside `onSubmit` and report them with `helpers.setSubmitError` / `helpers.setErrors`.
+- `handleSubmit` accepts any event with `preventDefault` (form submit, button click) or no argument.
 
 ## Avoiding parent-driven re-renders
 

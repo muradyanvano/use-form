@@ -49,6 +49,8 @@ src/stories/theme/applyDocumentTheme.test.ts
 src/stories/preview/safeActions.test.ts
 ```
 
+`src/hooks/useForm/regressions.test.tsx` holds cross-hook regression tests from the production audit (concurrent/superseded/rejected `isValidating` runs, reset during submit including `keepIsSubmitted` and overlapping submits, prototype-pollution guards, field-array key stability and item identity, SSR keys, stable `register` refs and their eviction, frozen shared dirty state). Add a new regression there only when it spans several hooks; otherwise use the module's own test file.
+
 Do **not** split `useForm` into thematic files. Keep all hook behavior (including nested paths, debounce integration, async defaults, and unregister) in `useForm.test.ts`. Subscription isolation (render counts) belongs in `subscriptions.test.tsx`. Controller isolation belongs in `useController.test.tsx`. Field-array behavior belongs in `useFieldArray.test.tsx`. Pure unregister helpers belong in `fieldRegistration.test.ts`.
 
 For debounced validation and async default tests, use Vitest fake timers / controlled promises — avoid real waits.

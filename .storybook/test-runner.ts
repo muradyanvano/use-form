@@ -41,12 +41,28 @@ function readA11yParameters(value: unknown): A11yParameters | undefined {
   }
 }
 
+type RunnerPage = Parameters<NonNullable<TestRunnerConfig['preVisit']>>[0]
+
+/** Console errors and uncaught exceptions per page, reset before every story visit. */
+const pageErrors = new WeakMap<RunnerPage, string[]>()
+
 /**
  * Runs real CSF `play` functions in Chromium via Storybook test-runner,
+ * fails on React/console errors or uncaught exceptions during a story,
  * and fails on serious accessibility violations when `parameters.a11y.test` is `error`.
  */
 const config: TestRunnerConfig = {
   async preVisit(page) {
+    if (!pageErrors.has(page)) {
+      page.on('console', (message) => {
+        if (message.type() === 'error') pageErrors.get(page)?.push(message.text())
+      })
+      page.on('pageerror', (error) => {
+        pageErrors.get(page)?.push(error.message)
+      })
+    }
+    pageErrors.set(page, [])
+
     const hasAxe = await page.evaluate(() => typeof window.axe !== 'undefined')
     if (!hasAxe) {
       await injectAxe(page)
@@ -54,6 +70,10 @@ const config: TestRunnerConfig = {
   },
   async postVisit(page, context) {
     await waitForPageReady(page)
+    const errors = pageErrors.get(page) ?? []
+    if (errors.length > 0) {
+      throw new Error(`Story logged console errors:\n${errors.join('\n')}`)
+    }
     const storyContext = await getStoryContext(page, context)
     const a11yParam = readA11yParameters(storyContext.parameters?.a11y)
     if (a11yParam?.test === 'off' || a11yParam?.disable === true) {

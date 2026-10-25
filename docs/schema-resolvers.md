@@ -134,8 +134,9 @@ import { standardSchemaResolver } from '@muradyanvano/use-form/resolvers/standar
 
 The adapter is **not** exported from the core package entry. It lives at `src/resolvers/standard-schema` and the published subpath `./resolvers/standard-schema`.
 
-- Issue paths are joined with dots.
-- Missing, empty, or symbol-containing issue paths become `rootError`; the first pathless message wins.
+- Issue paths are joined with dots. Both plain keys (`['items', 0, 'name']`) and spec `PathSegment` objects (`[{ key: 'items' }, { key: 0 }]`, as emitted by Valibot) are supported.
+- Missing, empty, or symbol-containing issue paths, and paths with a `__proto__` / `prototype` / `constructor` segment, become `rootError`; the first pathless message wins.
+- The exported `StandardSchemaV1*` types follow the spec's optional-`undefined` shape, so schemas typed with the spec interface (Zod 4, Valibot, ArkType) are accepted, including under `exactOptionalPropertyTypes`.
 - An empty issue list or malformed schema result is a safe blocking failure, never a successful validation.
 - No Zod/Valibot runtime dependency in the core or adapter bundles.
 - Compatibility is limited to the documented contract + tests with hand-rolled schemas.

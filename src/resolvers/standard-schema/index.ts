@@ -6,5 +6,6 @@ export { standardSchemaResolver } from '../../hooks/useForm/validation/standardS
 export type {
   StandardSchemaV1,
   StandardSchemaV1Issue,
+  StandardSchemaV1PathSegment,
   StandardSchemaV1Result,
 } from '../../hooks/useForm/validation/standardSchemaResolver.ts'

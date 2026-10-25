@@ -1,4 +1,4 @@
-import type { ChangeEvent, FocusEvent, RefCallback, SubmitEvent } from 'react'
+import type { ChangeEvent, FocusEvent, RefCallback } from 'react'
 import type {
   DeepPartial,
   FieldArrayItem,
@@ -151,6 +151,10 @@ export type ResetOptions<T extends FormValues> = {
   keepDefaultValues?: boolean
   keepErrors?: boolean
   keepTouched?: boolean
+  /**
+   * @deprecated Has no effect. Dirty state is always derived from `values` vs `defaultValues`;
+   * use `keepValues` or `keepDefaultValues` to control what stays dirty.
+   */
   keepDirty?: boolean
   keepIsSubmitted?: boolean
   keepSubmitCount?: boolean
@@ -160,8 +164,13 @@ export type ResetOptions<T extends FormValues> = {
 }
 
 export type SetValueOptions = {
+  /** Force (`true`) or skip (`false`) validation. Omit to follow `mode` / `reValidateMode`. */
   shouldValidate?: boolean
+  /** Mark the field touched. */
   shouldTouch?: boolean
+  /**
+   * @deprecated Has no effect. Dirty state is always derived from `values` vs `defaultValues`.
+   */
   shouldDirty?: boolean
 }
 
@@ -478,7 +487,11 @@ export interface UseFormReturn<TInput extends FormValues> {
   validateField: <K extends FieldPath<TInput>>(name: K) => Promise<boolean>
   validate: () => Promise<boolean>
 
-  handleSubmit: (event?: SubmitEvent<HTMLFormElement>) => Promise<void>
+  /**
+   * Validate and submit. Pass it to `<form onSubmit>` or call it with any event that has
+   * `preventDefault` (or no argument). Rejects when `onSubmit` or a validator throws.
+   */
+  handleSubmit: (event?: { preventDefault?: () => void }) => Promise<void>
 
   register: <K extends FieldPath<TInput>>(
     name: K,
